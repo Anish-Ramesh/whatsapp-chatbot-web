@@ -3,3 +3,4 @@ env1
 updated_schema.sql
 .qodo
 tests
+__pycache__
