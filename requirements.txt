@@ -5,3 +5,4 @@ fuzzywuzzy
 nltk
 mysql-connector-python
 python-dateutil
+gunicorn
