@@ -60,9 +60,18 @@ def format_phone_number(phone):
 
 def send_text_with_buttons(phone, text, buttons):
     phone = format_phone_number(phone)
-    # Fetch user language
-    lang = get_user_language(phone)
-    translated_text = translate_text(text, lang)
+    # Fetch user language, but fall back safely if DB or translation fails
+    try:
+        lang = get_user_language(phone)
+    except Exception as e:
+        print("[WARN] get_user_language failed in send_text_with_buttons:", e)
+        lang = None
+    try:
+        translated_text = translate_text(text, lang)
+    except Exception as e:
+        print("[WARN] translate_text failed in send_text_with_buttons:", e)
+        translated_text = text
+
     WEB_MESSAGES.append({
         "phone": phone,
         "type": "buttons",
@@ -73,9 +82,18 @@ def send_text_with_buttons(phone, text, buttons):
 
 def send_text(phone, msg):
     phone = format_phone_number(phone)
-    # Fetch user language
-    lang = get_user_language(phone) 
-    translated_msg = translate_text(msg, lang)
+    # Fetch user language, but fall back safely if DB or translation fails
+    try:
+        lang = get_user_language(phone)
+    except Exception as e:
+        print("[WARN] get_user_language failed in send_text:", e)
+        lang = None
+    try:
+        translated_msg = translate_text(msg, lang)
+    except Exception as e:
+        print("[WARN] translate_text failed in send_text:", e)
+        translated_msg = msg
+
     WEB_MESSAGES.append({
         "phone": phone,
         "type": "text",
