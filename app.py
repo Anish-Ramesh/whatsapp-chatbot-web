@@ -1,5 +1,4 @@
 # --- FILE: app.py ---
-
 from flask import Flask, request, render_template, jsonify, redirect, url_for, session
 from handlers import handle_message, place_order_from_catalog
 import os
@@ -249,4 +248,4 @@ def webhook():
         return f"Webhook error: {e}", 500
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True, use_reloader=False)
+    app.run(port=8080, use_reloader=False)
