@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin - Grocery Bot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0b141a; color: #fff; }
+        .page { max-width: 800px; margin: 40px auto; padding: 16px; }
+        h1 { font-size: 20px; margin-bottom: 12px; }
+        .card { background: #111b21; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+        label { display: block; font-size: 13px; margin-top: 8px; margin-bottom: 4px; }
+        input[type="text"], input[type="password"], input[type="file"] { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #202c33; background: #0b141a; color: #fff; }
+        button { margin-top: 12px; padding: 8px 14px; border-radius: 6px; border: none; background: #00a884; color: #fff; cursor: pointer; font-size: 13px; }
+        .error { color: #ff6b6b; font-size: 13px; margin-top: 6px; }
+        .section-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .logout-link { font-size: 13px; color: #00a884; text-decoration: none; }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="top-bar">
+        <h1>Grocery Bot Admin</h1>
+        <a href="/logout" class="logout-link">Logout</a>
+    </div>
+    <div class="card">
+        <div class="section-title">Upload Products Excel</div>
+        <p style="font-size: 13px; opacity: 0.85;">Expected columns from row 2: Name, Price, ImageURL, Description, Stock, SKU.</p>
+        <form method="post" enctype="multipart/form-data">
+            <label for="file">Excel file (.xlsx)</label>
+            <input type="file" id="file" name="file" accept=".xlsx" required />
+            <button type="submit" name="upload" value="1">Upload</button>
+            {% if error %}<div class="error">{{ error }}</div>{% endif %}
+        </form>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+        <div class="section-title">Chat as Admin</div>
+        <p style="font-size: 13px; opacity: 0.85;">Open the chat interface to use all bot commands (catalog, orders, alerts, seller tools, etc.) with your admin account.</p>
+        <form method="get" action="/chat">
+            <button type="submit">Open Chat</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

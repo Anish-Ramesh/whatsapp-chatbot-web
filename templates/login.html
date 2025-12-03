@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Login - Grocery Bot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0b141a; color: #fff; }
+        .page { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .card { width: 360px; max-width: 90%; background: #111b21; border-radius: 12px; padding: 18px 16px; box-shadow: 0 4px 18px rgba(0,0,0,0.6); }
+        h1 { font-size: 18px; margin: 0 0 10px; }
+        p { font-size: 13px; opacity: 0.85; margin: 0 0 12px; }
+        label { display: block; font-size: 12px; margin-top: 8px; margin-bottom: 4px; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #202c33; background: #0b141a; color: #fff; font-size: 13px; }
+        .row { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+        .role-option { font-size: 13px; }
+        button { margin-top: 14px; padding: 8px 14px; border-radius: 8px; border: none; background: #00a884; color: #fff; cursor: pointer; font-size: 13px; width: 100%; }
+        .error { color: #ff6b6b; font-size: 13px; margin-top: 8px; }
+        .admin-pass { display: none; }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="card">
+        <h1>Grocery Bot Login</h1>
+        <p>Select your role and enter your details to continue.</p>
+        <form method="post">
+            <label>Role</label>
+            <div class="row">
+                <label class="role-option"><input type="radio" name="role" value="user" checked /> User</label>
+                <label class="role-option"><input type="radio" name="role" value="admin" /> Admin</label>
+            </div>
+            <label for="phone">Phone number</label>
+            <input id="phone" name="phone" type="text" placeholder="911234567890" required />
+            <label for="name">Name</label>
+            <input id="name" name="name" type="text" placeholder="Your name" />
+            <div id="adminPassRow" class="admin-pass">
+                <label for="admin_password">Admin password (default: pass123)</label>
+                <input id="admin_password" name="admin_password" type="password" />
+            </div>
+            <button type="submit">Continue</button>
+            {% if error %}<div class="error">{{ error }}</div>{% endif %}
+        </form>
+    </div>
+</div>
+<script>
+(function() {
+    var roleRadios = document.querySelectorAll('input[name="role"]');
+    var adminRow = document.getElementById('adminPassRow');
+    function updateRole() {
+        var selectedRole = 'user';
+        for (var i = 0; i < roleRadios.length; i++) {
+            if (roleRadios[i].checked) {
+                selectedRole = roleRadios[i].value;
+                break;
+            }
+        }
+        adminRow.style.display = selectedRole === 'admin' ? 'block' : 'none';
+    }
+    for (var i = 0; i < roleRadios.length; i++) {
+        roleRadios[i].addEventListener('change', updateRole);
+    }
+    updateRole();
+})();
+</script>
+</body>
+</html>

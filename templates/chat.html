@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Grocery Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0a1014; }
+        .app-root { display: flex; height: 100vh; width: 100%; background: #0a1014; }
+        .phone-frame { flex: 1; max-width: 100%; height: 100vh; background: #000; border-radius: 0; box-shadow: none; overflow: hidden; display: flex; flex-direction: column; }
+        .status-bar { height: 18px; background: #000; }
+        .chat-header { background: #075E54; color: #fff; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .chat-header-avatar { width: 32px; height: 32px; border-radius: 50%; background: #25D366; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #075E54; }
+        .chat-header-info { display: flex; flex-direction: column; }
+        .chat-header-title { font-weight: 600; font-size: 14px; }
+        .chat-header-sub { font-size: 11px; opacity: 0.85; }
+        .chat-header-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+        .logout-button { padding: 4px 10px; border-radius: 12px; border: 1px solid #374045; background: transparent; color: #e9edef; font-size: 11px; cursor: pointer; }
+        .header-btn { padding: 4px 8px; border-radius: 12px; border: none; font-size: 11px; cursor: pointer; background: #00A884; color: #fff; }
+        .chat-bg { flex: 1; position: relative; background: #0a1014 url('https://i.imgur.com/0Zf1Y4Q.png') repeat; background-size: 260px 260px; }
+        .messages { position: absolute; inset: 0; padding: 10px 8px 60px; overflow-y: auto; }
+        .message-row { display: flex; margin-bottom: 4px; }
+        .message-row.user { justify-content: flex-end; }
+        .message-row.bot { justify-content: flex-start; }
+        .bubble { max-width: 80%; padding: 6px 8px; border-radius: 8px; font-size: 13px; line-height: 1.3; position: relative; color: #111; white-space: pre-wrap; }
+        .bubble.user { background: #DCF8C6; border-bottom-right-radius: 2px; }
+        .bubble.bot { background: #fff; border-bottom-left-radius: 2px; }
+        .bubble-meta { font-size: 10px; color: #666; margin-top: 2px; text-align: right; }
+        .input-bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px; background: #202C33; display: flex; gap: 6px; align-items: center; }
+        .input-bar input { flex: 1; padding: 8px 10px; border-radius: 18px; border: none; outline: none; font-size: 13px; background: #2A3942; color: #fff; }
+        .input-bar button { width: 40px; height: 40px; border-radius: 50%; border: none; background: #00A884; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .input-bar button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .login-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; }
+        .login-card { width: 85%; background: #202C33; border-radius: 12px; padding: 16px 14px; color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.6); }
+        .login-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+        .login-sub { font-size: 12px; opacity: 0.85; margin-bottom: 12px; }
+        .login-field { margin-bottom: 10px; }
+        .login-field label { display: block; font-size: 12px; margin-bottom: 4px; }
+        .login-field input { width: 100%; padding: 8px 10px; border-radius: 8px; border: none; outline: none; background: #111B21; color: #fff; font-size: 13px; }
+        .login-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+        .login-btn { padding: 8px 14px; border-radius: 8px; border: none; background: #00A884; color: #fff; font-size: 13px; cursor: pointer; }
+        .buttons-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+        .quick-btn { padding: 4px 8px; border-radius: 12px; border: none; background: #ECE5DD; font-size: 11px; cursor: pointer; }
+        .catalog-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.65); display: none; align-items: center; justify-content: center; }
+        .catalog-panel { width: 90%; max-width: 960px; max-height: 90vh; background: #111b21; border-radius: 12px; padding: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.7); display: flex; flex-direction: column; }
+        .catalog-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .catalog-title { font-size: 15px; font-weight: 600; }
+        .catalog-close { border: none; background: transparent; color: #fff; font-size: 18px; cursor: pointer; }
+        .catalog-body { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+        .product-card { background: #202c33; border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px; color: #e9edef; }
+        .product-image { width: 100%; height: 120px; background-size: cover; background-position: center; border-radius: 6px; background-color: #111; }
+        .product-name { font-size: 13px; font-weight: 600; color: #e9edef; }
+        .product-desc { font-size: 11px; opacity: 0.9; max-height: 40px; overflow: hidden; color: #d1d7db; }
+        .product-price { font-size: 13px; color: #00A884; font-weight: 600; }
+        .product-stock { font-size: 11px; opacity: 0.8; color: #c4c9cc; }
+        .product-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+        .qty-controls { display: flex; align-items: center; gap: 4px; }
+        .qty-btn { width: 22px; height: 22px; border-radius: 50%; border: none; background: #00A884; color: #fff; cursor: pointer; font-size: 14px; }
+        .qty-label { font-size: 12px; min-width: 18px; text-align: center; }
+        .catalog-footer { margin-top: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .checkout-btn { padding: 6px 12px; border-radius: 8px; border: none; background: #00A884; color: #fff; font-size: 13px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="app-root">
+    <div class="phone-frame">
+        <div class="status-bar"></div>
+        <div class="chat-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div class="chat-header-avatar">G</div>
+                <div class="chat-header-info">
+                    <div class="chat-header-title">Grocery Bot</div>
+                    <div class="chat-header-sub">Online</div>
+                </div>
+            </div>
+            <div class="chat-header-actions">
+                <button id="catalogHeaderBtn" class="header-btn">Catalog</button>
+                <form method="get" action="/logout">
+                    <button type="submit" class="logout-button">Logout</button>
+                </form>
+            </div>
+        </div>
+        <div class="chat-bg">
+            <div id="messages" class="messages"></div>
+            <div class="input-bar">
+                <input id="text" type="text" placeholder="Type a message" autocomplete="off" />
+                <button id="sendBtn">&#9658;</button>
+            </div>
+            <div id="catalogOverlay" class="catalog-overlay">
+                <div class="catalog-panel">
+                    <div class="catalog-header">
+                        <div class="catalog-title">Product Catalog</div>
+                        <button id="catalogCloseBtn" class="catalog-close">&times;</button>
+                    </div>
+                    <div id="catalogBody" class="catalog-body"></div>
+                    <div class="catalog-footer">
+                        <div id="catalogTotal">Total: ₹0.00</div>
+                        <button id="checkoutBtn" class="checkout-btn">Place Order</button>
+                    </div>
+                </div>
+            </div>
+            <div id="loginOverlay" class="login-overlay">
+                <div class="login-card">
+                    <div class="login-title">Welcome to Grocery Bot</div>
+                    <div class="login-sub">Enter your phone number to start chatting. This acts like your WhatsApp number.</div>
+                    <div class="login-field">
+                        <label for="phone">Phone number (with country code, e.g. 911234567890)</label>
+                        <input id="phone" type="text" placeholder="911234567890" />
+                    </div>
+                    <div class="login-field">
+                        <label for="name">Name (optional)</label>
+                        <input id="name" type="text" placeholder="Your name" />
+                    </div>
+                    <div class="login-actions">
+                        <button id="loginBtn" class="login-btn">Start Chat</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+(function() {
+    const initialPhone = "{{ initial_phone or '' }}";
+    const initialName = "{{ initial_name or '' }}";
+    const phoneInput = document.getElementById('phone');
+    const nameInput = document.getElementById('name');
+    const textInput = document.getElementById('text');
+    const sendBtn = document.getElementById('sendBtn');
+    const messagesDiv = document.getElementById('messages');
+    const loginOverlay = document.getElementById('loginOverlay');
+    const loginBtn = document.getElementById('loginBtn');
+    const catalogOverlay = document.getElementById('catalogOverlay');
+    const catalogBody = document.getElementById('catalogBody');
+    const catalogTotal = document.getElementById('catalogTotal');
+    const catalogHeaderBtn = document.getElementById('catalogHeaderBtn');
+    const catalogCloseBtn = document.getElementById('catalogCloseBtn');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+
+    let currentPhone = null;
+    let lastServerMessagesLength = 0;
+
+    function addMessage(role, text) {
+        const row = document.createElement('div');
+        row.className = 'message-row ' + role;
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble ' + role;
+        bubble.textContent = text;
+        row.appendChild(bubble);
+        messagesDiv.appendChild(row);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function addBotMessageWithButtons(text, buttons) {
+        const row = document.createElement('div');
+        row.className = 'message-row bot';
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble bot';
+        const p = document.createElement('div');
+        p.textContent = text;
+        bubble.appendChild(p);
+        if (Array.isArray(buttons) && buttons.length) {
+            const btnRow = document.createElement('div');
+            btnRow.className = 'buttons-row';
+            buttons.forEach(b => {
+                const id = b && b.reply && b.reply.id;
+                const title = (b && b.reply && b.reply.title) || id || '';
+                if (!id || !title) return;
+                const btn = document.createElement('button');
+                btn.className = 'quick-btn';
+                btn.textContent = title;
+                btn.addEventListener('click', () => {
+                    sendQuickReply(id, title);
+                });
+                btnRow.appendChild(btn);
+            });
+            bubble.appendChild(btnRow);
+        }
+        row.appendChild(bubble);
+        messagesDiv.appendChild(row);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    async function fetchMessages() {
+        if (!currentPhone) return;
+        try {
+            const res = await fetch('/chat/messages?phone=' + encodeURIComponent(currentPhone));
+            if (!res.ok) return;
+            const data = await res.json();
+            const messages = data.messages || [];
+            if (messages.length <= lastServerMessagesLength) return;
+            const newMessages = messages.slice(lastServerMessagesLength);
+            newMessages.forEach(m => {
+                if (m.type === 'buttons') {
+                    addBotMessageWithButtons(m.text, m.buttons || []);
+                } else {
+                    addMessage('bot', m.text);
+                }
+            });
+            lastServerMessagesLength = messages.length;
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function sendMessage(text, buttonId) {
+        if (!currentPhone || !text) return;
+        addMessage('user', text);
+        sendBtn.disabled = true;
+        try {
+            const payload = { phone: currentPhone, text: text };
+            if (buttonId) payload.button_id = buttonId;
+            await fetch('/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            await fetchMessages();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            sendBtn.disabled = false;
+        }
+    }
+
+    function sendQuickReply(id, title) {
+        sendMessage(title, id);
+    }
+
+    function handleSendClick() {
+        const text = textInput.value.trim();
+        if (!text) return;
+        textInput.value = '';
+        sendMessage(text);
+    }
+
+    function handleLogin() {
+        const phone = (phoneInput.value || '').trim();
+        if (!phone) return;
+        currentPhone = phone;
+        loginOverlay.style.display = 'none';
+        addMessage('bot', 'Hi ' + (nameInput.value || 'there') + '! You can now start chatting with Grocery Bot.');
+    }
+
+    function openCatalog() {
+        if (!currentPhone) return;
+        catalogOverlay.style.display = 'flex';
+        loadCatalog();
+    }
+
+    function closeCatalog() {
+        catalogOverlay.style.display = 'none';
+    }
+
+    async function loadCatalog() {
+        if (!currentPhone) return;
+        try {
+            const [prodRes, cartRes] = await Promise.all([
+                fetch('/api/products'),
+                fetch('/api/cart?phone=' + encodeURIComponent(currentPhone))
+            ]);
+            if (!prodRes.ok) return;
+            const prodData = await prodRes.json();
+            const cartData = cartRes.ok ? await cartRes.json() : { items: [], total: 0 };
+            const products = prodData.products || [];
+            const cartItems = cartData.items || [];
+            const qtyByProduct = {};
+            cartItems.forEach(it => { qtyByProduct[it.product_id] = it.quantity; });
+            catalogBody.innerHTML = '';
+            products.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.dataset.productId = String(p.id);
+                card.dataset.price = String(p.price);
+                if (p.image_url) {
+                    const img = document.createElement('div');
+                    img.className = 'product-image';
+                    img.style.backgroundImage = 'url(' + p.image_url + ')';
+                    card.appendChild(img);
+                }
+                const name = document.createElement('div');
+                name.className = 'product-name';
+                name.textContent = p.name;
+                card.appendChild(name);
+                if (p.description) {
+                    const desc = document.createElement('div');
+                    desc.className = 'product-desc';
+                    desc.textContent = p.description;
+                    card.appendChild(desc);
+                }
+                const price = document.createElement('div');
+                price.className = 'product-price';
+                price.textContent = '₹' + Number(p.price).toFixed(2);
+                card.appendChild(price);
+                const stock = document.createElement('div');
+                stock.className = 'product-stock';
+                stock.textContent = 'Stock: ' + (p.stock != null ? p.stock : '—');
+                card.appendChild(stock);
+                const actions = document.createElement('div');
+                actions.className = 'product-actions';
+                const qtyControls = document.createElement('div');
+                qtyControls.className = 'qty-controls';
+                const minus = document.createElement('button');
+                minus.className = 'qty-btn';
+                minus.textContent = '-';
+                const qtyLabel = document.createElement('span');
+                qtyLabel.className = 'qty-label';
+                const currentQty = qtyByProduct[p.id] || 0;
+                qtyLabel.textContent = currentQty;
+                const plus = document.createElement('button');
+                plus.className = 'qty-btn';
+                plus.textContent = '+';
+                minus.addEventListener('click', () => changeQty(card, p.id, -1));
+                plus.addEventListener('click', () => changeQty(card, p.id, 1));
+                qtyControls.appendChild(minus);
+                qtyControls.appendChild(qtyLabel);
+                qtyControls.appendChild(plus);
+                actions.appendChild(qtyControls);
+                card.appendChild(actions);
+                catalogBody.appendChild(card);
+            });
+            const total = cartData.total || 0;
+            catalogTotal.textContent = 'Total: ₹' + Number(total).toFixed(2);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function changeQty(card, productId, delta) {
+        if (!currentPhone) return;
+        const qtyLabel = card.querySelector('.qty-label');
+        if (!qtyLabel) return;
+        const oldQty = parseInt(qtyLabel.textContent || '0', 10) || 0;
+        const newQty = Math.max(0, oldQty + delta);
+        if (newQty === oldQty) return;
+        qtyLabel.textContent = String(newQty);
+
+        // Recompute total from all product cards to avoid drift
+        let newTotal = 0;
+        catalogBody.querySelectorAll('.product-card').forEach(c => {
+            const qLabel = c.querySelector('.qty-label');
+            const price = parseFloat(c.dataset.price || '0');
+            const q = qLabel ? (parseInt(qLabel.textContent || '0', 10) || 0) : 0;
+            newTotal += price * q;
+        });
+        catalogTotal.textContent = 'Total: ₹' + newTotal.toFixed(2);
+
+        updateCartQty(productId, delta);
+    }
+
+    async function updateCartQty(productId, delta) {
+        if (!currentPhone) return;
+        try {
+            const res = await fetch('/api/cart/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: currentPhone, product_id: productId, delta: delta })
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            const total = data.total || 0;
+            catalogTotal.textContent = 'Total: ₹' + Number(total).toFixed(2);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function checkoutCart() {
+        if (!currentPhone) return;
+        try {
+            const res = await fetch('/api/cart/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: currentPhone })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                alert(data.error || 'Checkout failed');
+                return;
+            }
+            addMessage('bot', 'Your order request has been sent. Check chat for confirmation.');
+            closeCatalog();
+            await fetchMessages();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    if (initialPhone) {
+        currentPhone = initialPhone;
+        loginOverlay.style.display = 'none';
+        if (initialName) {
+            addMessage('bot', 'Hi ' + initialName + '! You can now start chatting with Grocery Bot.');
+        }
+    }
+
+    loginBtn.addEventListener('click', handleLogin);
+    sendBtn.addEventListener('click', handleSendClick);
+    textInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            handleSendClick();
+        }
+    });
+    catalogHeaderBtn.addEventListener('click', openCatalog);
+    catalogCloseBtn.addEventListener('click', closeCatalog);
+    checkoutBtn.addEventListener('click', checkoutCart);
+
+    setInterval(fetchMessages, 2000);
+})();
+</script>
+</body>
+</html>
