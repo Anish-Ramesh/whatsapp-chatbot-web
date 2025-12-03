@@ -6,3 +6,4 @@ nltk
 mysql-connector-python
 python-dateutil
 gunicorn
+openpyxl
