@@ -62,7 +62,8 @@ def detect_intent(text: Optional[str], button_payload: Optional[str] = None) -> 
     if button_payload:
         return button_payload
     text = (text or "").lower().strip()
-    text_words = [lemmatizer.lemmatize(w) for w in text.split()]
+    # Use simple lowercase tokens instead of lemmatization to avoid requiring NLTK corpora
+    text_words = text.split()
     synonyms = {
         "greeting": ["hi", "hello", "hey", "namaste", "hola", "greetings"],
         "thanks": ["thanks", "thank you", "thx", "dhanyavad", "shukriya"],
@@ -89,7 +90,7 @@ def detect_intent(text: Optional[str], button_payload: Optional[str] = None) -> 
     best_intent = "unknown"
     for intent, keys in synonyms.items():
         for key in keys:
-            key_words = [lemmatizer.lemmatize(w) for w in key.split()]
+            key_words = key.split()
             joined_key = " ".join(key_words)
             score = fuzz.partial_ratio(" ".join(text_words), joined_key)
             if score > best_score:
