@@ -136,9 +136,15 @@ def api_cart():
         phone = (request.args.get('phone') or '').strip()
         if not phone:
             return jsonify({"error": "phone is required"}), 400
-        items = get_cart(phone)
-        total = sum(float(item['price']) * int(item['quantity']) for item in items) if items else 0.0
+        cart_items = get_cart(phone)
+        # Get the total price of items in the cart
+        total = 0
+        for product_id in cart_items:
+            product = get_product_by_id(product_id)
+            if product:
+                total += product.get("price", 0)
         return jsonify({"items": items, "total": total}), 200
+        
     except Exception as e:
         print(f"[ERROR] Exception in api_cart: {e}")
         return jsonify({"error": str(e)}), 500
